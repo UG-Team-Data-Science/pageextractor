@@ -70,11 +70,11 @@ ax2.imshow(cropped)
 
 Photo of a book page, unfortunately centerfold and page block are included
 
-![Photo of a book page, unfortunately centerfold and page block are included](assets/example-03-processed.png)
+![Photo of a book page, unfortunately centerfold and page block are included](https://github.com/UG-Team-Data-Science/pageextractor/blob/main/assets/example-03-processed.png?raw=true)
 
 Photo of a letter
 
-![Photo of a letter](assets/example-04-processed.png)
+![Photo of a letter](https://github.com/UG-Team-Data-Science/pageextractor/blob/main/assets/example-04-processed.png?raw=true)
 
 ## Acknowledgments
 
