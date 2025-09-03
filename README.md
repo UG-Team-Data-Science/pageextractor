@@ -68,7 +68,12 @@ ax2.imshow(cropped)
 
 ### Examples
 
+Photo of a book page, unfortunately centerfold and page block are included
+
 ![Photo of a book page, unfortunately centerfold and page block are included](assets/example-03-processed.png)
+
+Photo of a letter
+
 ![Photo of a letter](assets/example-04-processed.png)
 
 ## Acknowledgments
