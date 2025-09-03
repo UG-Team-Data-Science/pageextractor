@@ -114,10 +114,12 @@ class PageExtractor():
     self.predictor = SAM2ImagePredictor(self.model)
 
 
-  def extract_page(self, page):
+  def extract_page(self, page, prompt=None):
     """Uses SAM2 to extract warp a four-corner around the page area
     and extracts that as the image"""
-    inputs = self.processor(images=[page], text=[self.text_prompt], padding=True, return_tensors="pt").to(self.device)
+
+    prompt = prompt if prompt is not None else self.text_prompt
+    inputs = self.processor(images=[page], text=[prompt], padding=True, return_tensors="pt").to(self.device)
 
     with torch.no_grad():
         outputs = self.gdino_model(**inputs)
@@ -153,11 +155,13 @@ class PageExtractor():
     cropped = Image.fromarray(cropped)
     return mask, fourcorner, cropped
 
-  def extract_pages(self, pages):
+  def extract_pages(self, pages, prompt=None):
     """Extracts pages from photo's of pages using SAM.
     Takes a list of PIL.Image and returns PIL.Image's"""
+
+    prompt = prompt if prompt is not None else self.text_prompt
     return [
         {'mask': mask, 'cropped': cropped, 'polygon': fourcorner}
         for page in tqdm(pages)
-        for mask, fourcorner, cropped in [self.extract_page(page)]
+        for mask, fourcorner, cropped in [self.extract_page(page, prompt)]
     ]
