@@ -70,6 +70,7 @@ def aligned_rectangle_coords(polygon):
   # to [0,0 -> w,h] coordinates.
   return np.roll(coords, shift=-coords.sum(1).argmin(), axis=0)
 
+
 SAM_MODELS = {
     "sam2.1_hiera_tiny": {
         "url": "https://dl.fbaipublicfiles.com/segment_anything_2/092824/sam2.1_hiera_tiny.pt",
@@ -100,7 +101,7 @@ class PageExtractor():
     self.text_threshold = text_threshold
 
     self.processor = AutoProcessor.from_pretrained(gdino_model_id)
-    self.gdino_model = AutoModelForZeroShotObjectDetection.from_pretrained(gdino_model_id).to(device)
+    self.gdino_model = AutoModelForZeroShotObjectDetection.from_pretrained(gdino_model_id).to(self.device)
 
     sam = SAM_MODELS[sam_type]
     cfg = compose(config_name=sam["config"], overrides=[])
@@ -108,7 +109,7 @@ class PageExtractor():
     self.model = instantiate(cfg.model, _recursive_=True)
     state_dict = torch.hub.load_state_dict_from_url(sam["url"], map_location="cpu")["model"]
     self.model.load_state_dict(state_dict, strict=True)
-    self.model = self.model.to(device)
+    self.model = self.model.to(self.device)
     self.model.eval()
     self.predictor = SAM2ImagePredictor(self.model)
 
@@ -116,17 +117,17 @@ class PageExtractor():
   def extract_page(self, page):
     """Uses SAM2 to extract warp a four-corner around the page area
     and extracts that as the image"""
-    inputs = self.processor(images=[img], text=[prompt], padding=True, return_tensors="pt").to(gdino_model.device)
+    inputs = self.processor(images=[page], text=[self.text_prompt], padding=True, return_tensors="pt").to(self.device)
 
     with torch.no_grad():
-        outputs = gdino_model(**inputs)
+        outputs = self.gdino_model(**inputs)
 
     results = self.processor.post_process_grounded_object_detection(
         outputs, inputs.input_ids, self.box_threshold, text_threshold=self.text_threshold,
         target_sizes=[page.size[::-1]],
     )
 
-    self.predictor.set_image(np.array(img))
+    self.predictor.set_image(np.array(page))
     masks, scores, logits = self.predictor.predict(
         box=results[0]['boxes'], multimask_output=False)
     if len(masks.shape) > 3:
@@ -147,9 +148,9 @@ class PageExtractor():
     
     tform3 = skimage.transform.ProjectiveTransform()
     tform3.estimate(src, fourcorner)
-    cropped = skimage.transform.warp(np.array(img), tform3, output_shape=(h, w))
+    cropped = skimage.transform.warp(np.array(page), tform3, output_shape=(h, w))
     cropped = (255 * cropped).astype(np.uint8)
-    cropped = Image.fromarray(self.extract_page(page)[2])
+    cropped = Image.fromarray(cropped)
     return mask, fourcorner, cropped
 
   def extract_pages(self, pages):

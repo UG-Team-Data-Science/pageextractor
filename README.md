@@ -66,6 +66,11 @@ ax1.imshow(1-mask, cmap='Blues', alpha=0.8 - 0.8*mask)
 ax2.imshow(cropped)
 ```
 
+### Examples
+
+![Photo of a book page, unfortunately centerfold and page block are included](assets/example-03-processed.png)
+![Photo of a letter](assets/example-04-processed.png)
+
 ## Acknowledgments
 
 This project is based on/used the following repositories:
