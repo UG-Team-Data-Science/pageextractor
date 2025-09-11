@@ -165,3 +165,21 @@ class PageExtractor():
         for page in tqdm(pages)
         for mask, fourcorner, cropped in [self.extract_page(page, prompt)]
     ]
+
+  def unload(self):
+    """Unload all models from GPU VRAM to free memory."""
+    if hasattr(self, 'gdino_model') and self.gdino_model is not None:
+      self.gdino_model.to('cpu')
+      del self.gdino_model
+      self.gdino_model = None
+    if hasattr(self, 'model') and self.model is not None:
+      self.model.to('cpu')
+      del self.model
+      self.model = None
+    if hasattr(self, 'predictor') and self.predictor is not None:
+      del self.predictor
+      self.predictor = None
+      
+    # Clear GPU cache if available
+    if torch.cuda.is_available():
+      torch.cuda.empty_cache()
