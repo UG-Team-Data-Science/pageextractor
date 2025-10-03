@@ -64,7 +64,7 @@ def simplify_to_n(polygon, n, eps=1):
     simplified = shapely.simplify(polygon, tolerance=tolerance)
     coords = simplified.exterior.coords.xy
     # n+1 because first and last coord are the same, i.e. closed polygon.
-    while len(coords[0]) != n+1 or (max_tolerance - min_tolerance) > eps:
+    while len(coords[0]) != n+1 or max_tolerance is None or (max_tolerance - min_tolerance) > eps:
       if min_tolerance > max_min_tolerance:
         if convexified:
           raise ValueError(f"Failed to simplify at tolerance [{min_tolerance}, inf), probably weirdly non-convex")
@@ -172,7 +172,7 @@ class PageExtractor():
         box=results[0]['boxes'], multimask_output=False)[0] #[0] for masks
     if len(masks.shape) > 3:
       masks = np.squeeze(masks, axis=1)
-    mask = masks[0]
+    mask = masks[0] 
 
     background_white = np.maximum((255-255*mask[..., None]).astype(np.uint8), np.array(page))
 
@@ -192,8 +192,7 @@ class PageExtractor():
       fourcorner = shapely.reverse(fourcorner)
     fourcorner_pts = aligned_rectangle_coords(fourcorner)
 
-
-    #box to map stuff to, this is actually a box with 90deg angles.
+    # box to map stuff to, this is actually a box with 90deg angles.
     # h, w as the average of the 4-corner edge lengths
     h, w = map(int, np.sqrt(((fourcorner_pts - fourcorner_pts[[1,2,3,0]]) ** 2).sum(1)).reshape(2,2).mean(0).round())
     src = np.array([[0, 0], [0, h], [w, h], [w, 0]])
@@ -228,7 +227,7 @@ class PageExtractor():
 
     # Alternative 'crop': piecewice affine transform to fourcorners, then crop and
     # project to a rectangle as before. This maps or stretches curved pages inside the crop.
-    page_corrections = skimage.transform(np.array(page), chain_tform(tform0, tform1), output_shape=(h, w))
+    page_corrections = skimage.transform.warp(np.array(page), chain_tform(tform0, tform1), output_shape=(h, w))
 
     return mask, fourcorner, polygon, background_white, cropped, page_corrections
 
@@ -238,7 +237,7 @@ class PageExtractor():
 
     prompt = prompt if prompt is not None else self.text_prompt
     return [
-        {'mask': mask, 'cropped': cropped, 'polygon': fourcorner, 'polygon': polygon,
+        {'mask': mask, 'cropped': cropped, 'fourcorner': fourcorner, 'polygon': polygon,
          'white_background': background_white, 'page_corrections': page_corrections}
         for page in tqdm(pages)
         for mask, fourcorner, polygon, background_white, cropped, page_corrections in [
