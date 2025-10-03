@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "pageextractor"
-version = "0.1.7"
+version = "0.1.8"
 description = "Use SAM2 to extract and warp a page from a photo."
 readme = "README.md"
 authors = [
