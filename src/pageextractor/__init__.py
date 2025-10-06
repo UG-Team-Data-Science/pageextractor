@@ -174,7 +174,8 @@ class PageExtractor():
       masks = np.squeeze(masks, axis=1)
     mask = masks[0] 
 
-    background_white = np.maximum((255-255*mask[..., None]).astype(np.uint8), np.array(page))
+    background_white = Image.fromarray(
+      np.maximum((255-255*mask[..., None]).astype(np.uint8), np.array(page)))
 
     maskShape = list(rasterio.features.shapes(mask.astype('uint8')))
     polygon = max( # extract largest area with mask==1, assume this is the page
@@ -227,9 +228,12 @@ class PageExtractor():
 
     # Alternative 'crop': piecewice affine transform to fourcorners, then crop and
     # project to a rectangle as before. This maps or stretches curved pages inside the crop.
-    page_corrections = skimage.transform.warp(np.array(page), chain_tform(tform0, tform1), output_shape=(h, w))
+    page_corrections = Image.fromarray(
+      skimage.transform.warp(np.array(page), chain_tform(tform0, tform1), output_shape=(h, w)).astype(np.uint8))
+    
+    mask_ = Image.fromarray((255 * mask).astype(np.uint8))
 
-    return mask, fourcorner, polygon, background_white, cropped, page_corrections
+    return mask_, fourcorner, polygon, background_white, cropped, page_corrections
 
   def extract_pages(self, pages, prompt=None):
     """Extracts pages from photo's of pages using SAM.
